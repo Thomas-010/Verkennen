@@ -1,0 +1,30 @@
+:root {
+    --main-color: blue;
+    --secondary-color: grey;
+    --pading-default: 10px;
+}
+
+
+#main-header {
+    background-color: var(--main-color);
+    color: var(--secondary-color);
+    padding: var(--pading-default);
+}
+
+.card {
+    border: 1px solid black;
+    background-color: var(--secondary-color);
+}
+
+.container > p {
+    color: blue;
+}
+
+ h2 + p {
+    color: red;
+ }
+
+ input[type="text"] {
+    border: 2px solid var(--main-color);
+ }
+
