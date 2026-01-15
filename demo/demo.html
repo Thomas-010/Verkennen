@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<div id="BerichtVak" style="width: 300px; height: 100px;">
+    welkom!
+
+</div>
+<button onclick="standaardBericht()"> </button>
+<button onclick="persoonlijkBericht()"> </button>
+<button onclick="resetBericht()"> </button>
+
+
+<script>
+    function zetBericht(tekst){
+        const vak = document.querySelector('#Berichtvak');
+        vak.textContent = tekst;
+    }
+
+    function voegBerichtToe(tekst) {
+        const vak = document.querySelector('#Berichtvak');
+        vak.textContent += " " + tekst
+    }
+
+    function standaardBericht() {
+        zetBericht('Dit is een standaardbericht!')
+    }
+
+    function persoonlijkBericht() {
+        voegBerichtToe('Hallo, gebruiker!')
+    }
+
+    function resetBericht() {
+        zetBericht('Welkom!')
+    }
+
+const kleuren = ['groen', 'blauw', 'rood']
+const randomIndex = math.floor(math.random() * kleuren.length)
+const randomColor = kleuren[randomIndex]
+console.log
+
+</script>
+</body>
+</html>
