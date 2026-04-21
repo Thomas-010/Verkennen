@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security Codeslot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --surface2: #1a2235;
+      --accent: #00f5a0;
+      --accent2: #00d4ff;
+      --danger: #ff3b5c;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --border: rgba(0, 245, 160, 0.2);
+      --glow: 0 0 30px rgba(0, 245, 160, 0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,245,160,0.012) 2px, rgba(0,245,160,0.012) 4px);
+      pointer-events: none;
+    }
+
+    .lock-container {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      padding: 2rem;
+    }
+
+    .lock-icon { font-size: 3rem; margin-bottom: 1rem; display: block; filter: drop-shadow(0 0 12px rgba(0,245,160,0.5)); }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
+      font-weight: 900;
+      color: var(--accent);
+      text-shadow: var(--glow);
+      letter-spacing: 0.15em;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle { color: var(--muted); font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 3rem; }
+
+    .digits { display: flex; gap: 1rem; justify-content: center; margin-bottom: 2.5rem; }
+
+    .digit-box {
+      width: 72px; height: 88px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem; font-weight: 900;
+      color: var(--accent);
+      text-shadow: var(--glow);
+      cursor: pointer; user-select: none;
+      transition: all 0.2s;
+      position: relative; overflow: hidden;
+    }
+
+    .digit-box:hover { border-color: var(--accent); box-shadow: var(--glow); }
+    .digit-box.active { border-color: var(--accent2); box-shadow: 0 0 20px rgba(0,212,255,0.4); }
+    .digit-box::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--accent); opacity: 0; transition: opacity 0.2s; }
+    .digit-box.active::after { opacity: 1; background: var(--accent2); }
+
+    .numpad { display: grid; grid-template-columns: repeat(3, 72px); gap: 10px; justify-content: center; margin-bottom: 1.5rem; }
+
+    .num-btn {
+      width: 72px; height: 56px;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .num-btn:hover { background: var(--surface2); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px rgba(0,245,160,0.2); }
+    .num-btn:active { transform: scale(0.95); }
+    .num-btn.del { color: var(--danger); border-color: rgba(255,59,92,0.2); font-size: 1rem; }
+    .num-btn.del:hover { border-color: var(--danger); color: var(--danger); box-shadow: 0 0 10px rgba(255,59,92,0.2); }
+    .num-btn.enter { grid-column: span 3; width: 226px; height: 56px; font-size: 0.75rem; letter-spacing: 0.12em; color: var(--accent); border-color: var(--border); padding: 0; }
+    .num-btn.enter:hover { background: rgba(0,245,160,0.1); border-color: var(--accent); box-shadow: var(--glow); }
+
+    .feedback { font-size: 0.85rem; letter-spacing: 0.1em; min-height: 24px; transition: all 0.3s; }
+    .feedback.wrong { color: var(--danger); }
+    .feedback.correct { color: var(--accent); text-shadow: var(--glow); }
+
+    .success-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10,14,26,0.97);
+      display: none; align-items: center; justify-content: center;
+      z-index: 100; flex-direction: column; text-align: center; padding: 2rem;
+    }
+    .success-overlay.show { display: flex; animation: fadeIn 0.5s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .success-icon { font-size: 5rem; margin-bottom: 1.5rem; animation: pulse 1.5s infinite; filter: drop-shadow(0 0 20px rgba(0,245,160,0.8)); }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+    .success-title { font-family: 'Orbitron', sans-serif; font-size: clamp(2rem, 8vw, 4rem); font-weight: 900; color: var(--accent); text-shadow: 0 0 40px rgba(0,245,160,0.8); letter-spacing: 0.1em; margin-bottom: 1rem; }
+    .success-sub { color: var(--muted); font-size: 0.85rem; letter-spacing: 0.2em; margin-bottom: 2rem; }
+
+    .reset-btn { padding: 10px 28px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; }
+    .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .particle { position: fixed; width: 6px; height: 6px; border-radius: 50%; pointer-events: none; animation: fly 1.5s ease-out forwards; z-index: 99; }
+    @keyframes fly { 0% { opacity: 1; transform: translate(0,0) scale(1); } 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); } }
+
+    .shake { animation: shake 0.4s ease; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+  </style>
+</head>
+<body>
+
+<div class="lock-container" id="lockContainer">
+  <span class="lock-icon">🔒</span>
+  <h1>CODESLOT</h1>
+  <p class="subtitle">Voer de viercijferige code in</p>
+  <div class="digits">
+    <div class="digit-box" id="d0">_</div>
+    <div class="digit-box" id="d1">_</div>
+    <div class="digit-box" id="d2">_</div>
+    <div class="digit-box" id="d3">_</div>
+  </div>
+  <div class="numpad" id="numpad"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon">🔓</div>
+  <div class="success-title">TOEGANG VERLEEND</div>
+  <p class="success-sub">De escaperoom is gekraakt!</p>
+  <button class="reset-btn" onclick="reset()">Opnieuw proberen</button>
+</div>
+
+<script>
+  const CODE = '5451';
+  const entered = ['','','',''];
+  let activeIndex = 0;
+  const digitEls = [0,1,2,3].map(i => document.getElementById('d'+i));
+  const feedback = document.getElementById('feedback');
+
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playTone(freq, type, duration, vol=0.3) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(); osc.stop(ctx.currentTime + duration);
+  }
+
+  function playClick() { playTone(800, 'sine', 0.08, 0.15); }
+
+  function playSuccess() {
+    [523, 659, 784, 1047].forEach((f, i) => {
+      setTimeout(() => playTone(f, 'sine', 0.3, 0.3), i * 120);
+    });
+  }
+
+  function playError() {
+    playTone(200, 'sawtooth', 0.15, 0.25);
+    setTimeout(() => playTone(150, 'sawtooth', 0.2, 0.25), 160);
+  }
+
+  function updateDisplay() {
+    digitEls.forEach((el, i) => {
+      el.textContent = entered[i] ? '●' : '_';
+      el.classList.toggle('active', i === activeIndex);
+    });
+  }
+
+  function pressNum(n) {
+    if (activeIndex > 3) return;
+    entered[activeIndex] = String(n);
+    if (activeIndex < 3) activeIndex++;
+    updateDisplay();
+    playClick();
+    feedback.textContent = '';
+    feedback.className = 'feedback';
+  }
+
+  function pressDelete() {
+    if (activeIndex > 0 && entered[activeIndex] === '') activeIndex--;
+    entered[activeIndex] = '';
+    updateDisplay();
+    playClick();
+    feedback.textContent = '';
+    feedback.className = 'feedback';
+  }
+
+  function pressEnter() {
+    const code = entered.join('');
+    if (entered.includes('')) {
+      feedback.textContent = 'Vul alle 4 cijfers in!';
+      feedback.className = 'feedback wrong';
+      playError();
+      return;
+    }
+    if (code === CODE) {
+      playSuccess();
+      spawnParticles();
+      setTimeout(() => document.getElementById('successOverlay').classList.add('show'), 400);
+    } else {
+      feedback.textContent = 'Foute code! Probeer opnieuw.';
+      feedback.className = 'feedback wrong';
+      playError();
+      const c = document.getElementById('lockContainer');
+      c.classList.add('shake');
+      setTimeout(() => c.classList.remove('shake'), 400);
+      entered.forEach((_,i) => entered[i] = '');
+      activeIndex = 0;
+      updateDisplay();
+    }
+  }
+
+  function spawnParticles() {
+    const cx = window.innerWidth/2, cy = window.innerHeight/2;
+    for (let i=0; i<30; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const angle = Math.random()*Math.PI*2, dist = 100+Math.random()*200;
+      p.style.left = cx+'px'; p.style.top = cy+'px';
+      p.style.setProperty('--tx', Math.cos(angle)*dist+'px');
+      p.style.setProperty('--ty', Math.sin(angle)*dist+'px');
+      p.style.background = Math.random()>0.5?'#00f5a0':'#00d4ff';
+      p.style.animationDelay = Math.random()*0.3+'s';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 2000);
+    }
+  }
+
+  function reset() {
+    entered.forEach((_,i) => entered[i]='');
+    activeIndex = 0;
+    updateDisplay();
+    feedback.textContent = '';
+    feedback.className = 'feedback';
+    document.getElementById('successOverlay').classList.remove('show');
+  }
+
+  const numpad = document.getElementById('numpad');
+  [1,2,3,4,5,6,7,8,9].forEach(n => {
+    const btn = document.createElement('button');
+    btn.className='num-btn'; btn.textContent=n;
+    btn.addEventListener('click', () => pressNum(n));
+    numpad.appendChild(btn);
+  });
+  const delBtn = document.createElement('button');
+  delBtn.className='num-btn del'; delBtn.textContent='⌫';
+  delBtn.addEventListener('click', pressDelete);
+  numpad.appendChild(delBtn);
+  const zeroBtn = document.createElement('button');
+  zeroBtn.className='num-btn'; zeroBtn.textContent='0';
+  zeroBtn.addEventListener('click', () => pressNum(0));
+  numpad.appendChild(zeroBtn);
+  const enterBtn = document.createElement('button');
+  enterBtn.className='num-btn enter'; enterBtn.textContent='ONTGRENDEL';
+  enterBtn.addEventListener('click', pressEnter);
+  numpad.appendChild(enterBtn);
+
+  digitEls.forEach((el,i) => el.addEventListener('click', () => { activeIndex=i; updateDisplay(); }));
+  document.addEventListener('keydown', e => {
+    if (e.key>='0'&&e.key<='9') pressNum(parseInt(e.key));
+    else if (e.key==='Backspace') pressDelete();
+    else if (e.key==='Enter') pressEnter();
+  });
+
+  updateDisplay();
+</script>
+</body>
+</html>
